@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Hash Equivalence Server Self Management</title>
+    </head>
+    <body>
+        <h1>New User {{ username }}</h1>
+        <div>
+            No user named {{ username }} is currently registered.
+        </div>
+        {% if self_reg_enabled %}
+        <div>
+            To register this user, click <a href="register">here</a>
+        </div>
+        {% else %}
+        <div>
+            Please contact an administrator {% if admin_contact %} at {{ admin_contact }} {% endif %} to add an account for you.
+        </div>
+        {% endif %}
+    </body>
+</html>
+

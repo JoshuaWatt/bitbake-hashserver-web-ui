@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Hash Equivalence Server Self Management</title>
+    </head>
+    <body>
+        <h1>Welcome {{ username }}</h1>
+        <div>
+            You currently have the following permissions:
+            <ul>
+            {% for perm in permissions %}
+                <li><span class="perm">{{ perm }}</span></li>
+            {% endfor %}
+            </ul>
+        </div>
+        <div>
+            To reset your login token, click <a href="reset">here</a>
+        </div>
+        {% if "@user-admin" in permissions %}
+        <div class="nav">
+            <a href="users">User Administration</a>
+        </div>
+        {% endif %}
+        {% if "@db-admin" in permissions %}
+        <div class="nav">
+            <a href="database">Database Administration</a>
+        </div>
+        {% endif %}
+    </body>
+</html>

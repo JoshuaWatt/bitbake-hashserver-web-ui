@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Hash Equivalence Server Database Management</title>
+    </head>
+    <body>
+        <div>
+            <h1>Database usage</h1>
+            <table>
+                <tr>
+                    <th>Table name</th>
+                    <th>Rows</th>
+                </tr>
+            {% for t in usage %}
+                <tr>
+                    <td>{{ t["name"] }}</td>
+                    <td>{{ t["rows"] }}</td>
+                </tr>
+            {% endfor %}
+            </table>
+        </div>
+        <div class="nav">
+            <a href="./">Go back</a>
+        </div>
+    </body>
+</html>
+
+
