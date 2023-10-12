@@ -33,7 +33,7 @@
         function update_user_perms(username) {
             const perms = get_perms_string(username);
             const req = new XMLHttpRequest();
-            req.open("GET", `user-admin/set-perms?username=${encodeURIComponent(username)}&permissions=${encodeURIComponent(perms)}`);
+            req.open("GET", `api/user-admin/set-perms?username=${encodeURIComponent(username)}&permissions=${encodeURIComponent(perms)}`);
             req.addEventListener("load", function () {
                 const data = JSON.parse(req.responseText);
                 if ("error" in data) {
@@ -55,7 +55,7 @@
 
         function delete_user(username) {
             const req = new XMLHttpRequest();
-            req.open("GET", `user-admin/delete?username=${encodeURIComponent(username)}`);
+            req.open("GET", `api/user-admin/delete?username=${encodeURIComponent(username)}`);
             req.addEventListener("load", function () {
                 const data = JSON.parse(req.responseText);
                 if ("error" in data) {
@@ -68,7 +68,7 @@
 
         function reset_token(username) {
             const req = new XMLHttpRequest();
-            req.open("GET", `user-admin/reset?username=${encodeURIComponent(username)}`);
+            req.open("GET", `api/user-admin/reset?username=${encodeURIComponent(username)}`);
             req.addEventListener("load", function () {
                 const data = JSON.parse(req.responseText);
                 if ("error" in data) {
@@ -103,7 +103,7 @@
             }
 
             const req = new XMLHttpRequest();
-            req.open("GET", `user-admin/new-user?username=${encodeURIComponent(username)}&permissions=${encodeURIComponent(perms)}`);
+            req.open("GET", `api/user-admin/new-user?username=${encodeURIComponent(username)}&permissions=${encodeURIComponent(perms)}`);
             req.addEventListener("load", function () {
                 const data = JSON.parse(req.responseText);
                 if ("error" in data) {

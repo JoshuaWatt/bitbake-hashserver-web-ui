@@ -17,6 +17,11 @@
         <div>
             To reset your login token, click <a href="reset">here</a>
         </div>
+        {% if "@read" in permissions %}
+        <div class="nav">
+            <a href="stats">Usage Statistics</a>
+        </div>
+        {% endif %}
         {% if "@user-admin" in permissions %}
         <div class="nav">
             <a href="users">User Administration</a>

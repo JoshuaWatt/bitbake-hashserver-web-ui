@@ -4,7 +4,8 @@ TEMPLATES = \
     error.html.j2 \
     index.html.j2 \
     new-user-token.html.j2 \
-    no-user.html.j2 
+    no-user.html.j2 \
+    stats.html.j2
 
 prefix ?= /usr/local
 datadir ?= $(prefix)/share

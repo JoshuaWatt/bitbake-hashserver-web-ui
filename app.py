@@ -215,7 +215,7 @@ def get_users():
         return error_page("Unable to complete request", str(e))
 
 
-@app.route("/user-admin/delete")
+@app.route("/api/user-admin/delete")
 def user_admin_delete():
     mod_username = request.args.get("username")
     if not mod_username:
@@ -232,7 +232,7 @@ def user_admin_delete():
         return {"error": str(e)}
 
 
-@app.route("/user-admin/set-perms")
+@app.route("/api/user-admin/set-perms")
 def user_admin_set_perms():
     mod_username = request.args.get("username")
     if not mod_username:
@@ -252,7 +252,7 @@ def user_admin_set_perms():
         return {"error": str(e)}
 
 
-@app.route("/user-admin/reset")
+@app.route("/api/user-admin/reset")
 def user_admin_reset_token():
     mod_username = request.args.get("username")
     if not mod_username:
@@ -268,7 +268,7 @@ def user_admin_reset_token():
         return {"error": str(e)}
 
 
-@app.route("/user-admin/new-user")
+@app.route("/api/user-admin/new-user")
 def user_admin_new_user():
     mod_username = request.args.get("username")
     if not mod_username:
@@ -307,6 +307,47 @@ def database():
             )
     except (bb.asyncrpc.InvokeError, bb.asyncrpc.ClientError) as e:
         return error_page("Unable to complete request", str(e))
+
+
+@app.route("/stats")
+def stats():
+    try:
+        with api_client() as client:
+            user = client.get_user()
+
+            stats = client.get_stats()
+            info = []
+            columns = set()
+
+            for name in sorted(stats.keys()):
+                s = {"name": name}
+                for k, v in stats[name].items():
+                    if isinstance(v, float):
+                        v = "{0:.3f}".format(v)
+                    s[k] = v
+                    columns.add(k)
+                info.append(s)
+
+            return render_template(
+                "stats.html.j2",
+                info=info,
+                columns=sorted(list(columns)),
+                permissions=user["permissions"],
+            )
+    except (bb.asyncrpc.InvokeError, bb.asyncrpc.ClientError) as e:
+        return error_page("Unable to complete request", str(e))
+
+
+@app.route("/api/reset-stats")
+def reset_stats():
+    try:
+        with api_client() as client:
+            return client.reset_stats()
+
+    except (bb.asyncrpc.InvokeError, bb.asyncrpc.ClientError) as e:
+        return {"error": "Unable to complete request: " + str(e)}
+    except Exception as e:
+        return {"error": str(e)}
 
 
 @app.after_request

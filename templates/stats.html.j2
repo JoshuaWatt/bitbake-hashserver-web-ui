@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Hash Equivalence Server Usage Statistics</title>
+    </head>
+    <script>
+        function reset_stats() {
+            const req = new XMLHttpRequest();
+            req.open("GET", "api/reset-stats");
+            req.addEventListener("load", function () {
+                const data = JSON.parse(req.responseText);
+                if ("error" in data) {
+                    window.alert(data["error"]);
+                }
+                location.reload();
+            })
+            req.send();
+        }
+
+    </script>
+    <body>
+        <div>
+            <h1>Usage Statistics</h1>
+            <table>
+                <tr>
+                    <th>Record</th>
+                {% for col in columns %}
+                    <th>{{ col }}</th>
+                {% endfor %}
+                </tr>
+            {% for row in info %}
+                <tr>
+                    <td>{{ row["name"] }}</td>
+                {% for col in columns %}
+                    <td>{% if col in row %}{{ row[col] }}{% endif %}</td>
+                {% endfor %}
+                </tr>
+            {% endfor %}
+            </table>
+        </div>
+        {% if "@db-admin" in permissions %}
+        <div>
+            <button onclick='reset_stats()'>Reset Statistics</button>
+        </div>
+        {% endif %}
+        <div class="nav">
+            <a href="./">Go back</a>
+        </div>
+    </body>
+</html>
+
