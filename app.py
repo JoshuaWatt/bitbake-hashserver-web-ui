@@ -80,6 +80,8 @@ def get_username():
     if TEST_USER:
         return TEST_USER
 
+    app.logger.error("Unable to determine current user. Headers:\n%s", request.headers)
+
     return None
 
 
