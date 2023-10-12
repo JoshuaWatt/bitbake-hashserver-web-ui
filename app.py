@@ -21,14 +21,17 @@ import contextlib
 import flask
 from flask import Flask, request, render_template
 
-sys.path.insert(0, "@datadir@/bitbake-hashserver/lib")
+app = Flask(__name__)
+app.config.from_prefixed_env("HSUI")
+
+# The path to bitbake
+BITBAKE_PATH = app.config.get("BITBAKE_PATH", "/usr/share/bitbake-hashserver")
+
+sys.path.insert(0, f"{BITBAKE_PATH}/lib")
 
 import hashserv
 import hashserv.server
 import bb.asyncrpc
-
-app = Flask(__name__)
-app.config.from_prefixed_env("HSUI")
 
 # Optional host where the application should bind
 HOST = app.config.get("HOST", "0.0.0.0")
