@@ -1,0 +1,20 @@
+[project]
+name = "bitbake_hashserver_web_ui"
+version = "0.0.1"
+authors = [
+    { name="Joshua Watt", email="Joshua.Watt@garmin.com" },
+]
+description = "Web UI for the Bitbake Hash Equivalence Server"
+readme = "README.md"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/JoshuaWatt/bitbake-hashserver-web-ui"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
