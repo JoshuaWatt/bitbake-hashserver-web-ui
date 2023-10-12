@@ -4,6 +4,51 @@
         <meta charset="UTF-8">
         <title>Hash Equivalence Server Database Management</title>
     </head>
+    <script>
+        function remove_unused_entries() {
+            const req = new XMLHttpRequest();
+            const seconds = parseInt(document.getElementById("unused-age").value) * parseInt(document.getElementById("unused-age-scale").value);
+            req.open("GET", `api/db/remove-unused?age-seconds=${encodeURIComponent(seconds)}`);
+            req.addEventListener("load", function () {
+                const data = JSON.parse(req.responseText);
+                if ("error" in data) {
+                    window.alert(data["error"]);
+                } else {
+                    window.alert(`Removed ${data['count']} entries`);
+                }
+                location.reload();
+            })
+            req.send();
+        }
+
+        function remove_entries() {
+            let query = [];
+            let e;
+            {% for col in query_columns %}
+            e = document.getElementById("remove-{{ col }}");
+            if (e.value) {
+                query.push(encodeURIComponent("{{ col }}") + "=" + encodeURIComponent(e.value));
+            }
+            {% endfor %}
+
+            if (query.length == 0) {
+                return;
+            }
+
+            const req = new XMLHttpRequest();
+            req.open("GET", "api/db/remove?" + query.join("&"));
+            req.addEventListener("load", function () {
+                const data = JSON.parse(req.responseText);
+                if ("error" in data) {
+                    window.alert(data["error"]);
+                } else {
+                    window.alert(`Removed ${data['count']} entries`);
+                }
+                location.reload();
+            })
+            req.send();
+        }
+    </script>
     <body>
         <div>
             <h1>Database usage</h1>
@@ -19,6 +64,37 @@
                 </tr>
             {% endfor %}
             </table>
+        </div>
+        <div>
+            <h1>Clean unused database entries</h1>
+            Older than
+            <input type="number" id="unused-age" value="0"/>
+            <select id="unused-age-scale">
+                <option value="1">Seconds</option>
+                <option value="60">Minutes</option>
+                <option value="3600">Hours</option>
+                <option value="86400">Days</option>
+                <option value="604800">Weeks</option>
+                <option value="2628000">Months</option>
+                <option value="31536000">Years</option>
+            </select>
+            <button onclick='remove_unused_entries()'>Remove</button>
+        </div>
+        <div>
+            <h1>Remove matching entries</h1>
+            <table>
+                <tr>
+                    <th>Name</th>
+                    <th>Value</th>
+                </tr>
+                {% for col in query_columns %}
+                <tr>
+                    <td>{{ col }}</td>
+                    <td><input type="text" id="remove-{{ col }}"/></td>
+                </tr>
+                {% endfor %}
+            </table>
+            <button onclick='remove_entries()'>Remove</button>
         </div>
         <div class="nav">
             <a href="./">Go back</a>

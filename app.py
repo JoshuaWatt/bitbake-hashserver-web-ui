@@ -304,9 +304,43 @@ def database():
             return render_template(
                 "database.html.j2",
                 usage=tables,
+                query_columns=sorted(client.get_db_query_columns()),
             )
     except (bb.asyncrpc.InvokeError, bb.asyncrpc.ClientError) as e:
         return error_page("Unable to complete request", str(e))
+
+
+@app.route("/api/db/remove-unused")
+def db_remove_unused():
+    age_seconds = request.args.get("age-seconds")
+    if not age_seconds:
+        return {"error": "age-seconds not specified"}
+
+    try:
+        age_seconds = int(age_seconds)
+    except TypeError:
+        return {"error": "age-seconds is not an integer"}
+
+    try:
+        with api_client() as client:
+            return client.clean_unused(age_seconds)
+
+    except (bb.asyncrpc.InvokeError, bb.asyncrpc.ClientError) as e:
+        return {"error": "Unable to complete request: " + str(e)}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@app.route("/api/db/remove")
+def db_remove():
+    try:
+        with api_client() as client:
+            return client.remove(request.args)
+
+    except (bb.asyncrpc.InvokeError, bb.asyncrpc.ClientError) as e:
+        return {"error": "Unable to complete request: " + str(e)}
+    except Exception as e:
+        return {"error": str(e)}
 
 
 @app.route("/stats")
