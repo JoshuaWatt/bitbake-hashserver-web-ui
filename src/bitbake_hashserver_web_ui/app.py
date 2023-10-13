@@ -34,7 +34,7 @@ import hashserv.server
 import bb.asyncrpc
 
 # Optional host where the application should bind
-HOST = app.config.get("HOST", "0.0.0.0")
+HOST = app.config.get("HOST", "127.0.0.1")
 
 # Optional port where the application should bind
 PORT = int(app.config.get("PORT", 8000))
