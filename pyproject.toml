@@ -11,6 +11,9 @@ classifiers = [
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
 ]
+dependencies = [
+    "flask",
+]
 
 [project.urls]
 Homepage = "https://github.com/JoshuaWatt/bitbake-hashserver-web-ui"
