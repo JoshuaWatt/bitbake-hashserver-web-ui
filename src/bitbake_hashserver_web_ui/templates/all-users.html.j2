@@ -4,6 +4,7 @@
         <meta charset="UTF-8">
         <title>Hash Equivalence Server User Management</title>
     </head>
+    <script src="./static/common.js"></script>
     <script>
         const ALL_PERMS = ['{{ all_perms | join("', '") | safe }}'];
 
@@ -16,7 +17,7 @@
             return cb;
         }
 
-        function get_perms_string(prefix) {
+        function get_perms(prefix) {
             let perms = [];
             for (let p in ALL_PERMS) {
                 let cb = get_perm_checkbox(prefix, ALL_PERMS[p]);
@@ -25,17 +26,13 @@
                 }
             }
             if (perms.length == 0) {
-                return "@none";
+                return ["@none"];
             }
-            return perms.join(",");
+            return perms;
         }
 
         function update_user_perms(username) {
-            const perms = get_perms_string(username);
-            const req = new XMLHttpRequest();
-            req.open("GET", `api/user-admin/set-perms?username=${encodeURIComponent(username)}&permissions=${encodeURIComponent(perms)}`);
-            req.addEventListener("load", function () {
-                const data = JSON.parse(req.responseText);
+            user_set_perms(username, get_perms(username), function (data) {
                 if ("error" in data) {
                     window.alert(data["error"]);
                     location.reload();
@@ -49,28 +46,20 @@
                         }
                     }
                 }
-            })
-            req.send();
+            });
         }
 
         function delete_user(username) {
-            const req = new XMLHttpRequest();
-            req.open("GET", `api/user-admin/delete?username=${encodeURIComponent(username)}`);
-            req.addEventListener("load", function () {
-                const data = JSON.parse(req.responseText);
+            user_delete(username, function (data) {
                 if ("error" in data) {
                     window.alert(data["error"]);
                 }
                 location.reload();
-            })
-            req.send();
+            });
         }
 
         function reset_token(username) {
-            const req = new XMLHttpRequest();
-            req.open("GET", `api/user-admin/reset?username=${encodeURIComponent(username)}`);
-            req.addEventListener("load", function () {
-                const data = JSON.parse(req.responseText);
+            user_reset_token(username, function (data) {
                 if ("error" in data) {
                     window.alert(data["error"]);
                 } else {
@@ -79,8 +68,7 @@
                     window.alert(`New token for user ${username} is:\n${token}`);
                 }
                 location.reload();
-            })
-            req.send();
+            });
         }
 
         function on_delete_click(username) {
@@ -97,15 +85,12 @@
 
         function create_new_user() {
             const username = document.getElementById("new-user-name").value;
-            const perms = get_perms_string("new-user");
+            const perms = get_perms("new-user");
             if (!username) {
                 return;
             }
 
-            const req = new XMLHttpRequest();
-            req.open("GET", `api/user-admin/new-user?username=${encodeURIComponent(username)}&permissions=${encodeURIComponent(perms)}`);
-            req.addEventListener("load", function () {
-                const data = JSON.parse(req.responseText);
+            user_create(username, perms, function (data) {
                 if ("error" in data) {
                     window.alert(data["error"]);
                 } else {
@@ -114,8 +99,7 @@
                     window.alert(`Token for new user ${username} is:\n${token}`);
                 }
                 location.reload();
-            })
-            req.send();
+            });
         }
     </script>
     <body>

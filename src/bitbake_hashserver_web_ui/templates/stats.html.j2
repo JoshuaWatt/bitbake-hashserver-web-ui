@@ -4,18 +4,15 @@
         <meta charset="UTF-8">
         <title>Hash Equivalence Server Usage Statistics</title>
     </head>
+    <script src="./static/common.js"></script>
     <script>
         function reset_stats() {
-            const req = new XMLHttpRequest();
-            req.open("GET", "api/reset-stats");
-            req.addEventListener("load", function () {
-                const data = JSON.parse(req.responseText);
+            stats_reset(function (data) {
                 if ("error" in data) {
                     window.alert(data["error"]);
                 }
                 location.reload();
-            })
-            req.send();
+            });
         }
 
     </script>

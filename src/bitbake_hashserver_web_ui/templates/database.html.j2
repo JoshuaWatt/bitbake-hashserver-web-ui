@@ -4,49 +4,39 @@
         <meta charset="UTF-8">
         <title>Hash Equivalence Server Database Management</title>
     </head>
+    <script src="./static/common.js"></script>
     <script>
         function remove_unused_entries() {
-            const req = new XMLHttpRequest();
-            const seconds = parseInt(document.getElementById("unused-age").value) * parseInt(document.getElementById("unused-age-scale").value);
-            req.open("GET", `api/db/remove-unused?age-seconds=${encodeURIComponent(seconds)}`);
-            req.addEventListener("load", function () {
-                const data = JSON.parse(req.responseText);
+            db_remove_unused_entries(function (data) {
                 if ("error" in data) {
                     window.alert(data["error"]);
                 } else {
                     window.alert(`Removed ${data['count']} entries`);
                 }
                 location.reload();
-            })
-            req.send();
+            });
         }
 
         function remove_entries() {
-            let query = [];
+            let where = Object.create(null);
             let e;
+
             {% for col in query_columns %}
             e = document.getElementById("remove-{{ col }}");
             if (e.value) {
-                query.push(encodeURIComponent("{{ col }}") + "=" + encodeURIComponent(e.value));
+                where["{{ col }}"] = e.value;
             }
             {% endfor %}
 
-            if (query.length == 0) {
-                return;
-            }
 
-            const req = new XMLHttpRequest();
-            req.open("GET", "api/db/remove?" + query.join("&"));
-            req.addEventListener("load", function () {
-                const data = JSON.parse(req.responseText);
+            db_remove_entries(where, function (data) {
                 if ("error" in data) {
                     window.alert(data["error"]);
                 } else {
                     window.alert(`Removed ${data['count']} entries`);
                 }
                 location.reload();
-            })
-            req.send();
+            });
         }
     </script>
     <body>
