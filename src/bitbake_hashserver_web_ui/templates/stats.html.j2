@@ -7,7 +7,7 @@
     </head>
     <script src="./static/common.js"></script>
     <script>
-        function reset_stats() {
+        function on_reset_stats_click() {
             stats_reset(function (data) {
                 if ("error" in data) {
                     window.alert(data["error"]);
@@ -39,7 +39,7 @@
         </div>
         {% if "@db-admin" in permissions %}
         <div>
-            <button onclick='reset_stats()'>Reset Statistics</button>
+            <button onclick='on_reset_stats_click()'>Reset Statistics</button>
         </div>
         {% endif %}
         <div class="nav">

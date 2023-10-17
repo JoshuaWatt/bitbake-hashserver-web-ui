@@ -7,7 +7,7 @@
     </head>
     <script src="./static/common.js"></script>
     <script>
-        function remove_unused_entries() {
+        function on_remove_unused_entries_click() {
             db_remove_unused_entries(function (data) {
                 if ("error" in data) {
                     window.alert(data["error"]);
@@ -18,7 +18,7 @@
             });
         }
 
-        function remove_entries() {
+        function on_remove_entries_click() {
             let where = Object.create(null);
             let e;
 
@@ -58,34 +58,42 @@
         </div>
         <div>
             <h1>Clean unused database entries</h1>
-            Older than
-            <input type="number" id="unused-age" value="0"/>
-            <select id="unused-age-scale">
-                <option value="1">Seconds</option>
-                <option value="60">Minutes</option>
-                <option value="3600">Hours</option>
-                <option value="86400">Days</option>
-                <option value="604800">Weeks</option>
-                <option value="2628000">Months</option>
-                <option value="31536000">Years</option>
-            </select>
-            <button onclick='remove_unused_entries()'>Remove</button>
+            <div>
+                Older than
+                <input type="number" id="unused-age" value="0"/>
+                <select id="unused-age-scale">
+                    <option value="1">Seconds</option>
+                    <option value="60">Minutes</option>
+                    <option value="3600">Hours</option>
+                    <option value="86400">Days</option>
+                    <option value="604800">Weeks</option>
+                    <option value="2628000">Months</option>
+                    <option value="31536000">Years</option>
+                </select>
+            </div>
+            <div>
+                <button onclick='on_remove_unused_entries_click()'>Remove</button>
+            </div>
         </div>
         <div>
             <h1>Remove matching entries</h1>
-            <table>
-                <tr>
-                    <th>Name</th>
-                    <th>Value</th>
-                </tr>
-                {% for col in query_columns %}
-                <tr>
-                    <td>{{ col }}</td>
-                    <td><input type="text" id="remove-{{ col }}"/></td>
-                </tr>
-                {% endfor %}
-            </table>
-            <button onclick='remove_entries()'>Remove</button>
+            <div>
+                <table>
+                    <tr>
+                        <th>Name</th>
+                        <th>Value</th>
+                    </tr>
+                    {% for col in query_columns %}
+                    <tr>
+                        <td>{{ col }}</td>
+                        <td><input type="text" id="remove-{{ col }}"/></td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+            <div>
+                <button onclick='on_remove_entries_click()'>Remove</button>
+            </div>
         </div>
         <div class="nav">
             <a href="./">Go back</a>

@@ -6,9 +6,9 @@
         <link rel="stylesheet" href="./static/common.css" />
     </head>
     <body>
-        <h1>New User {{ username }}</h1>
+        <h1>New User <span class="username">{{ username }}</span></h1>
         <div>
-            No user named {{ username }} is currently registered.
+            No user named <span class="username">{{ username }}</span> is currently registered.
         </div>
         {% if self_reg_enabled %}
         <div>

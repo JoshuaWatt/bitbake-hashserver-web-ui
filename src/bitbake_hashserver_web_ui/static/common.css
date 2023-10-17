@@ -1,0 +1,24 @@
+.perm {
+    font-family: monospace;
+    font-weight: bolder;
+}
+
+.token {
+    font-family: monospace;
+    font-weight: bolder;
+}
+
+.username {
+    font-family: monospace;
+}
+
+.nav {
+    padding: 5px;
+}
+
+table, th, td {
+    border: 1px solid;
+    border-collapse: collapse;
+    padding: 5px;
+}
+
