@@ -144,8 +144,7 @@ def main():
 
             return render_template(
                 "index.html.j2",
-                username=username,
-                permissions=sorted(user["permissions"]),
+                user=user,
             )
     except (bb.asyncrpc.InvokeError, bb.asyncrpc.ClientError) as e:
         return error_page("Error accessing server", str(e))
@@ -165,31 +164,11 @@ def register():
             user = client.new_user(username, DEFAULT_PERMS)
 
             return render_template(
-                "new-user-token.html.j2",
-                title=f"New user {username} created",
+                "index.html.j2",
                 user=user,
             )
     except (bb.asyncrpc.InvokeError, bb.asyncrpc.ClientError) as e:
         return error_page(f"Unable to create user {username}", str(e))
-
-
-@app.route("/reset")
-def reset():
-    username = get_username()
-    if username is None:
-        return no_user_error_page()
-
-    try:
-        with admin_client() as client:
-            user = client.refresh_token(username)
-
-            return render_template(
-                "new-user-token.html.j2",
-                title=f"Token for {username} updated",
-                user=user,
-            )
-    except (bb.asyncrpc.InvokeError, bb.asyncrpc.ClientError) as e:
-        return error_page(f"Unable to update token for user {username}", str(e))
 
 
 @app.route("/users")
@@ -200,16 +179,12 @@ def get_users():
 
     try:
         with user_client(username) as client:
-            users = client.get_all_users()
-            users.sort(key=lambda u: u["username"])
-
             return render_template(
                 "all-users.html.j2",
-                users=users,
                 all_perms=sorted(list(hashserv.server.ALL_PERMISSIONS)),
                 admin_user=HASHSERVER_USER,
                 default_perms=DEFAULT_PERMS,
-                current_user=username,
+                user=client.get_user(),
             )
     except (bb.asyncrpc.InvokeError, bb.asyncrpc.ClientError) as e:
         return error_page("Unable to complete request", str(e))
@@ -288,23 +263,31 @@ def user_admin_new_user():
         return {"error": str(e)}
 
 
-@app.route("/database")
-def database():
+@app.route("/api/user-admin/all-users")
+def user_admin_all_users():
     try:
         with api_client() as client:
-            usage = client.get_db_usage()
-            tables = [
-                {
-                    "name": name,
-                    "rows": usage[name]["rows"],
-                }
-                for name in sorted(usage.keys())
-            ]
+            users = client.get_all_users()
+            return {"users": users}
 
+    except (bb.asyncrpc.InvokeError, bb.asyncrpc.ClientError) as e:
+        return {"error": "Unable to complete request: " + str(e)}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@app.route("/database")
+def database():
+    username = get_username()
+    if username is None:
+        return no_user_error_page()
+
+    try:
+        with user_client(username) as client:
             return render_template(
                 "database.html.j2",
-                usage=tables,
                 query_columns=sorted(client.get_db_query_columns()),
+                user=client.get_user(),
             )
     except (bb.asyncrpc.InvokeError, bb.asyncrpc.ClientError) as e:
         return error_page("Unable to complete request", str(e))
@@ -343,10 +326,26 @@ def db_remove():
         return {"error": str(e)}
 
 
-@app.route("/stats")
-def stats():
+@app.route("/api/db/usage")
+def db_stats():
     try:
         with api_client() as client:
+            return {"usage": client.get_db_usage()}
+
+    except (bb.asyncrpc.InvokeError, bb.asyncrpc.ClientError) as e:
+        return {"error": "Unable to complete request: " + str(e)}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@app.route("/stats")
+def stats():
+    username = get_username()
+    if username is None:
+        return no_user_error_page()
+
+    try:
+        with user_client(username) as client:
             user = client.get_user()
 
             stats = client.get_stats()
@@ -366,7 +365,7 @@ def stats():
                 "stats.html.j2",
                 info=info,
                 columns=sorted(list(columns)),
-                permissions=user["permissions"],
+                user=user,
             )
     except (bb.asyncrpc.InvokeError, bb.asyncrpc.ClientError) as e:
         return error_page("Unable to complete request", str(e))

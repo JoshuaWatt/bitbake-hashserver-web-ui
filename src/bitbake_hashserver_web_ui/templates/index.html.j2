@@ -1,37 +1,51 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
     <head>
-        <meta charset="UTF-8">
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="./static/bootstrap-5.3.2-dist/css/bootstrap.min.css"/>
+        <link rel="stylesheet" href="./static/common.css"/>
         <title>Hash Equivalence Server Self Management</title>
-        <link rel="stylesheet" href="./static/common.css" />
+        <script src="./static/common.js"></script>
+        <script>
+            function show_token_alert(token) {
+                live_alert("success", [
+                    '<p>New token is:</p>',
+                    `<p><span class="token">${escapeHTML(token)}</span></p>`,
+                    '<p>Please copy this now as you will be unable to retrieve it once you leave this page.</p>',
+                ].join(""));
+            }
+            function on_reset_click() {
+                user_reset_token("{{ user["username"] }}", function (data) {
+                    if ("error" in data) {
+                        live_alert("danger", data["error"]);
+                        return;
+                    }
+
+                    show_token_alert(data.token);
+                });
+            }
+
+
+            function on_load() {
+                {% if 'token' in user %}
+                    show_token_alert('{{ user["token"] }}');
+                {% endif %}
+            }
+        </script>
     </head>
-    <body>
-        <h1>Welcome <span class="username">{{ username }}</span></h1>
-        <div>
-            You currently have the following permissions:
-            <ul>
-            {% for perm in permissions %}
-                <li><span class="perm">{{ perm }}</span></li>
-            {% endfor %}
-            </ul>
+    <body onload="on_load()">
+        {% include "nav-bar.html.j2" %}
+        <div class="container">
+            <h1>Welcome <span class="username">{{ user["username"] }}</span></h1>
         </div>
-        <div>
-            To reset your login token, click <a href="reset">here</a>
+        {% include "user-perm-list.html.j2" %}
+        <div class="container">
+            <button class="btn btn-warning" onclick="on_reset_click()">Reset Login Token</button>
         </div>
-        {% if "@read" in permissions %}
-        <div class="nav">
-            <a href="stats">Usage Statistics</a>
+        <div class="container">
+            <div id="liveAlertPlaceholder"></div>
         </div>
-        {% endif %}
-        {% if "@user-admin" in permissions %}
-        <div class="nav">
-            <a href="users">User Administration</a>
-        </div>
-        {% endif %}
-        {% if "@db-admin" in permissions %}
-        <div class="nav">
-            <a href="database">Database Administration</a>
-        </div>
-        {% endif %}
+        <script src="./static/bootstrap-5.3.2-dist/js/bootstrap.min.js"></script>
     </body>
 </html>

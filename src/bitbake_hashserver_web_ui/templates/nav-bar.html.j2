@@ -1,0 +1,22 @@
+<div class="container bg-body-tertiary">
+    <ul class="nav">
+        <li class="nav-item">
+            <a class="nav-link" href="./">Home</a>
+        </li>
+        {% if "@read" in user["permissions"] %}
+        <li class="nav-item">
+            <a class="nav-link" href="stats">Usage Statistics</a>
+        </li>
+        {% endif %}
+        {% if "@user-admin" in user["permissions"] %}
+        <li class="nav-item">
+            <a class="nav-link" href="users">User Administration</a>
+        </li>
+        {% endif %}
+        {% if "@db-admin" in user["permissions"] %}
+        <li class="nav-item">
+            <a class="nav-link" href="database">Database Administration</a>
+        </li>
+        {% endif %}
+    </ul>
+</div>

@@ -1,3 +1,8 @@
+function escapeHTML(unsafeText) {
+    let div = document.createElement('div');
+    div.innerText = unsafeText;
+    return div.innerHTML;
+}
 
 /*
  * User Admin functions
@@ -44,6 +49,16 @@ function user_set_perms(username, perms, f) {
     req.send();
 }
 
+function get_all_users(f) {
+    const req = new XMLHttpRequest();
+    req.open("GET", "api/user-admin/all-users");
+    req.addEventListener("load", function () {
+        const data = JSON.parse(req.responseText);
+        f(data);
+    })
+    req.send();
+}
+
 /*
  * Database Admin functions
  */
@@ -78,6 +93,16 @@ function db_remove_entries(where, f) {
     req.send();
 }
 
+function db_get_usage(f) {
+    const req = new XMLHttpRequest();
+    req.open("GET", "api/db/usage");
+    req.addEventListener("load", function () {
+        const data = JSON.parse(req.responseText);
+        f(data);
+    })
+    req.send();
+}
+
 /*
  * Stats Admin functions
  */
@@ -89,4 +114,16 @@ function stats_reset(f) {
         f(data);
     })
     req.send();
+}
+
+function live_alert(type, message) {
+    const alertPlaceholder = document.getElementById("liveAlertPlaceholder");
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = [
+        `<div class="alert alert-${type} alert-dismissible" role="alert">`,
+        `   <div>${message}</div>`,
+        '   <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>',
+        '</div>'
+    ].join("")
+    alertPlaceholder.prepend(wrapper);
 }

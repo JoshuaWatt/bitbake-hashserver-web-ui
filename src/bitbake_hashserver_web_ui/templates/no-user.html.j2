@@ -1,24 +1,25 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
     <head>
-        <meta charset="UTF-8">
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="./static/bootstrap-5.3.2-dist/css/bootstrap.min.css"/>
+        <link rel="stylesheet" href="./static/common.css"/>
         <title>Hash Equivalence Server Self Management</title>
-        <link rel="stylesheet" href="./static/common.css" />
     </head>
     <body>
-        <h1>New User <span class="username">{{ username }}</span></h1>
-        <div>
+        <div class="container">
+            <h1>New User <span class="username">{{ username }}</span></h1>
             No user named <span class="username">{{ username }}</span> is currently registered.
         </div>
+        <div class="container">
         {% if self_reg_enabled %}
-        <div>
-            To register this user, click <a href="register">here</a>
-        </div>
+            <a class="btn btn-primary" role="button" href="register">Register this user</a>
         {% else %}
-        <div>
             Please contact an administrator {% if admin_contact %} at {{ admin_contact }} {% endif %} to add an account for you.
-        </div>
         {% endif %}
+        </div>
+        <script src="./static/bootstrap-5.3.2-dist/js/bootstrap.min.js"></script>
     </body>
 </html>
 

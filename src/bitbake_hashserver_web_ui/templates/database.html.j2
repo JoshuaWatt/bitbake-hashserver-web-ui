@@ -1,67 +1,97 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
     <head>
-        <meta charset="UTF-8">
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="./static/bootstrap-5.3.2-dist/css/bootstrap.min.css"/>
+        <link rel="stylesheet" href="./static/common.css"/>
         <title>Hash Equivalence Server Database Management</title>
-        <link rel="stylesheet" href="./static/common.css" />
-    </head>
-    <script src="./static/common.js"></script>
-    <script>
-        function on_remove_unused_entries_click() {
-            db_remove_unused_entries(function (data) {
-                if ("error" in data) {
-                    window.alert(data["error"]);
-                } else {
-                    window.alert(`Removed ${data['count']} entries`);
-                }
-                location.reload();
-            });
-        }
-
-        function on_remove_entries_click() {
-            let where = Object.create(null);
-            let e;
-
-            {% for col in query_columns %}
-            e = document.getElementById("remove-{{ col }}");
-            if (e.value) {
-                where["{{ col }}"] = e.value;
+        <script src="./static/common.js"></script>
+        <script>
+            function on_remove_unused_entries_click() {
+                db_remove_unused_entries(function (data) {
+                    if ("error" in data) {
+                        live_alert("danger", data["error"]);
+                    } else {
+                        live_alert("success", `Removed ${data['count']} entries`);
+                        update_db_usage();
+                    }
+                });
             }
-            {% endfor %}
 
+            function on_remove_entries_click() {
+                let where = Object.create(null);
+                let e;
 
-            db_remove_entries(where, function (data) {
-                if ("error" in data) {
-                    window.alert(data["error"]);
-                } else {
-                    window.alert(`Removed ${data['count']} entries`);
+                {% for col in query_columns %}
+                e = document.getElementById("remove-{{ col }}");
+                if (e.value) {
+                    where["{{ col }}"] = e.value;
                 }
-                location.reload();
-            });
-        }
-    </script>
-    <body>
-        <div>
-            <h1>Database usage</h1>
-            <table>
-                <tr>
-                    <th>Table name</th>
-                    <th>Rows</th>
-                </tr>
-            {% for t in usage %}
-                <tr>
-                    <td>{{ t["name"] }}</td>
-                    <td>{{ t["rows"] }}</td>
-                </tr>
-            {% endfor %}
+                {% endfor %}
+
+
+                db_remove_entries(where, function (data) {
+                    if ("error" in data) {
+                        live_alert("danger", data["error"]);
+                    } else {
+                        live_alert("success", `Removed ${data['count']} entries`);
+                        update_db_usage();
+                    }
+                });
+            }
+
+
+            function update_db_usage() {
+                db_get_usage(function (data) {
+                    if ("error" in data) {
+                        live_alert("danger", data["error"]);
+                        return;
+                    }
+
+                    let table_names = Object.keys(data.usage).sort();
+
+                    const table = document.getElementById("database-table");
+                    let tbody = document.createElement("tbody");
+
+                    for (let idx in table_names) {
+                        const name = table_names[idx];
+                        const table = data.usage[name];
+                        let row = tbody.insertRow();
+
+                        row.insertCell().innerHTML = escapeHTML(name);
+                        row.insertCell().innerHTML = escapeHTML(table.rows);
+                    }
+
+                    table.replaceChild(tbody, table.tBodies[0]);
+                });
+            }
+        </script>
+    </head>
+    <body onload='update_db_usage()'>
+        {% include "nav-bar.html.j2" %}
+        <div class="container">
+            <h1>Database Administration</h1>
+        </div>
+        <div class="container">
+            <h3>Database usage</h3>
+            <table class="table" id="database-table">
+                <thead>
+                    <tr>
+                        <th>Table name</th>
+                        <th>Rows</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
             </table>
         </div>
-        <div>
-            <h1>Clean unused database entries</h1>
-            <div>
-                Older than
-                <input type="number" id="unused-age" value="0"/>
-                <select id="unused-age-scale">
+        <div class="container">
+            <h3>Clean unused database entries</h3>
+            <div class="input-group mb-3">
+                <span class="input-group-text">Older than</span>
+                <input class="form-control" type="number" id="unused-age" value="0"/>
+                <select id="unused-age-scale" class="form-select">
                     <option value="1">Seconds</option>
                     <option value="60">Minutes</option>
                     <option value="3600">Hours</option>
@@ -70,34 +100,31 @@
                     <option value="2628000">Months</option>
                     <option value="31536000">Years</option>
                 </select>
-            </div>
-            <div>
-                <button onclick='on_remove_unused_entries_click()'>Remove</button>
+                <button class="btn btn-outline-primary" onclick='on_remove_unused_entries_click()'>Remove</button>
             </div>
         </div>
-        <div>
-            <h1>Remove matching entries</h1>
-            <div>
-                <table>
-                    <tr>
-                        <th>Name</th>
-                        <th>Value</th>
-                    </tr>
-                    {% for col in query_columns %}
-                    <tr>
-                        <td>{{ col }}</td>
-                        <td><input type="text" id="remove-{{ col }}"/></td>
-                    </tr>
-                    {% endfor %}
-                </table>
-            </div>
-            <div>
-                <button onclick='on_remove_entries_click()'>Remove</button>
-            </div>
+        <div class="container">
+            <h3>Remove matching entries</h3>
         </div>
-        <div class="nav">
-            <a href="./">Go back</a>
+        <div class="container">
+            {% for col in query_columns %}
+            <div class="mb-3 row">
+                <div class="col">
+                    {{ col }}
+                </div>
+                <div class="col">
+                    <input class="form-control" type="text" id="remove-{{ col }}"/></td>
+                </div>
+            </div>
+            {% endfor %}
         </div>
+        <div class="container">
+            <button class="btn btn-outline-primary" onclick='on_remove_entries_click()'>Remove</button>
+        </div>
+        <div class="container">
+            <div id="liveAlertPlaceholder"></div>
+        </div>
+        <script src="./static/bootstrap-5.3.2-dist/js/bootstrap.min.js"></script>
     </body>
 </html>
 

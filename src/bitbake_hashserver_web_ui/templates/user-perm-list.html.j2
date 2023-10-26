@@ -1,0 +1,8 @@
+<div class="container">
+    You currently have the following permissions:
+    <ul class="list-group">
+    {% for perm in user["permissions"]|sort %}
+        <li class="list-group-item"><span class="perm">{{ perm }}</span></li>
+    {% endfor %}
+    </ul>
+</div>

@@ -1,50 +1,57 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
     <head>
-        <meta charset="UTF-8">
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="./static/bootstrap-5.3.2-dist/css/bootstrap.min.css"/>
+        <link rel="stylesheet" href="./static/common.css"/>
         <title>Hash Equivalence Server Usage Statistics</title>
-        <link rel="stylesheet" href="./static/common.css" />
-    </head>
-    <script src="./static/common.js"></script>
-    <script>
-        function on_reset_stats_click() {
-            stats_reset(function (data) {
-                if ("error" in data) {
-                    window.alert(data["error"]);
-                }
-                location.reload();
-            });
-        }
+        <script src="./static/common.js"></script>
+        <script>
+            function on_reset_stats_click() {
+                stats_reset(function (data) {
+                    if ("error" in data) {
+                        window.alert(data["error"]);
+                    }
+                    location.reload();
+                });
+            }
 
-    </script>
+        </script>
+    </head>
     <body>
-        <div>
+        {% include "nav-bar.html.j2" %}
+        <div class="container">
             <h1>Usage Statistics</h1>
-            <table>
-                <tr>
-                    <th>Record</th>
-                {% for col in columns %}
-                    <th>{{ col }}</th>
+        </div>
+        <div class="container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Record</th>
+                    {% for col in columns %}
+                        <th>{{ col }}</th>
+                    {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                {% for row in info %}
+                    <tr>
+                        <td>{{ row["name"] }}</td>
+                    {% for col in columns %}
+                        <td>{% if col in row %}{{ row[col] }}{% endif %}</td>
+                    {% endfor %}
+                    </tr>
                 {% endfor %}
-                </tr>
-            {% for row in info %}
-                <tr>
-                    <td>{{ row["name"] }}</td>
-                {% for col in columns %}
-                    <td>{% if col in row %}{{ row[col] }}{% endif %}</td>
-                {% endfor %}
-                </tr>
-            {% endfor %}
+                </tbody>
             </table>
         </div>
-        {% if "@db-admin" in permissions %}
-        <div>
-            <button onclick='on_reset_stats_click()'>Reset Statistics</button>
+        {% if "@db-admin" in user["permissions"] %}
+        <div class="container">
+            <button class="btn btn-primary" onclick='on_reset_stats_click()'>Reset Statistics</button>
         </div>
         {% endif %}
-        <div class="nav">
-            <a href="./">Go back</a>
-        </div>
+        <script src="./static/bootstrap-5.3.2-dist/js/bootstrap.min.js"></script>
     </body>
 </html>
 
