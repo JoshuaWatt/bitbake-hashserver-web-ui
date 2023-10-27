@@ -52,17 +52,17 @@
                 });
             }
 
-            function on_delete_click(username) {
-                if (window.confirm(`Are you sure you want to delete user ${username}?\nThis action cannot be undone`)) {
-                    user_delete(username, function (data) {
-                        if ("error" in data) {
-                            live_alert("danger", data["error"]);
-                        } else {
-                            live_alert("success", `User <span class="username">${escapeHTML(username)}</span> deleted`);
-                            update_user_table();
-                        }
-                    });
-                }
+            function on_delete_click(event) {
+                const username = event.target.getAttribute("data-bs-username");
+                user_delete(username, function (data) {
+                    if ("error" in data) {
+                        live_alert("danger", data["error"]);
+                        return;
+                    }
+
+                    live_alert("success", `User <span class="username">${escapeHTML(username)}</span> deleted`);
+                    update_user_table();
+                });
             }
 
             function show_token_alert(username, token) {
@@ -72,16 +72,16 @@
                 ].join(""));
             }
 
-            function on_reset_click(username) {
-                if (window.confirm(`Are you sure you want to reset the token for user ${username}?\nThis will invalidate the current token and cannot be undone`)) {
-                    user_reset_token(username, function (data) {
-                        if ("error" in data) {
-                            live_alert("danger", data["error"]);
-                        } else {
-                            show_token_alert(data["username"], data["token"]);
-                        }
-                    });
-                }
+            function on_reset_click(event) {
+                const username = event.target.getAttribute("data-bs-username");
+                user_reset_token(username, function (data) {
+                    if ("error" in data) {
+                        live_alert("danger", data["error"]);
+                        return;
+                    }
+
+                    show_token_alert(data["username"], data["token"]);
+                });
             }
 
             function on_create_new_user_click() {
@@ -141,8 +141,11 @@
 
                         let reset_text = [
                             '<button',
+                            '   type"button"',
                             '   class="btn btn-warning"',
-                            `   onclick='on_reset_click("${user.username}")'`,
+                            '   data-bs-toggle="modal"',
+                            '   data-bs-target="#resetTokenConfirmModal"',
+                            `   data-bs-username="${user.username}"`,
                         ];
                         if ( user.username == ADMIN_USER) {
                             reset_text.push("disabled");
@@ -153,8 +156,11 @@
 
                         let delete_text = [
                             '<button',
+                            '   type"button"',
                             '   class="btn btn-danger"',
-                            `   onclick='on_delete_click("${user.username}")'`,
+                            '   data-bs-toggle="modal"',
+                            '   data-bs-target="#deleteConfirmModal"',
+                            `   data-bs-username="${user.username}"`,
                         ];
                         if ( user.username == ADMIN_USER || user.username == CURRENT_USER ) {
                             delete_text.push("disabled");
@@ -168,9 +174,16 @@
                 });
 
             }
+
+            function on_load() {
+                document.getElementById("deleteConfirmModal").addEventListener("show.bs.modal", on_confirm_dialog_show);
+                document.getElementById("resetTokenConfirmModal").addEventListener("show.bs.modal", on_confirm_dialog_show);
+
+                update_user_table();
+            }
         </script>
     </head>
-    <body onload='update_user_table()'>
+    <body onload='on_load()'>
         {% include "nav-bar.html.j2" %}
         <div class="container">
             <h1>User Administration</h1>
@@ -208,10 +221,10 @@
             Permissions:
             {% for perm in all_perms %}
             <div class="form-check form-switch">
-                <input 
+                <input
                     class="form-check-input"
                     role="switch"
-                    type="checkbox" 
+                    type="checkbox"
                     id="new-user-{{ perm }}"
                     {% if perm in default_perms %}checked{% endif %}
                 />
@@ -224,6 +237,66 @@
         </div>
         <div class="container">
             <div id="liveAlertPlaceholder"></div>
+        </div>
+
+        <!-- Delete confirmation Dialog -->
+        <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title">Delete user <span class="username" id="username"></span></h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        This action cannot be undone
+                    </div>
+                    <div class="modal-footer">
+                        <button
+                            type="button"
+                            class="btn btn-primary"
+                            data-bs-dismiss="modal"
+                        >Cancel</button>
+
+                        <button
+                            type="button"
+                            class="btn btn-danger"
+                            id="confirm-button"
+                            data-bs-dismiss="modal"
+                            onclick="on_delete_click(event)"
+                        >Delete User</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reset Token confirmation Dialog -->
+        <div class="modal fade" id="resetTokenConfirmModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title">Reset token for <span class="username" id="username"></span></h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        This action cannot be undone
+                    </div>
+                    <div class="modal-footer">
+                        <button
+                            type="button"
+                            class="btn btn-primary"
+                            data-bs-dismiss="modal"
+                        >Cancel</button>
+
+                        <button
+                            type="button"
+                            class="btn btn-warning"
+                            id="confirm-button"
+                            data-bs-dismiss="modal"
+                            onclick="on_reset_click(event)"
+                        >Reset Token</button>
+                    </div>
+                </div>
+            </div>
         </div>
         <script src="./static/bootstrap-5.3.2-dist/js/bootstrap.min.js"></script>
     </body>

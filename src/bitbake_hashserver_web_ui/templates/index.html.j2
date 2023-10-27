@@ -41,11 +41,46 @@
         </div>
         {% include "user-perm-list.html.j2" %}
         <div class="container">
-            <button class="btn btn-warning" onclick="on_reset_click()">Reset Login Token</button>
+            <button
+                class="btn btn-warning"
+                data-bs-toggle="modal"
+                data-bs-target="#resetTokenConfirmModal"
+            >Reset Login Token</button>
         </div>
         <div class="container">
             <div id="liveAlertPlaceholder"></div>
         </div>
+
+        <!-- Reset Token confirmation Dialog -->
+        <div class="modal fade" id="resetTokenConfirmModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title">Confirm Token Reset</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to reset your login token?</p>
+                        <p>This action cannot be undone</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button
+                            type="button"
+                            class="btn btn-primary"
+                            data-bs-dismiss="modal"
+                        >Cancel</button>
+
+                        <button
+                            type="button"
+                            class="btn btn-warning"
+                            data-bs-dismiss="modal"
+                            onclick="on_reset_click()"
+                        >Reset Token</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <script src="./static/bootstrap-5.3.2-dist/js/bootstrap.min.js"></script>
     </body>
 </html>

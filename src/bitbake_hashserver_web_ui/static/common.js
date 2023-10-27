@@ -127,3 +127,21 @@ function live_alert(type, message) {
     ].join("")
     alertPlaceholder.prepend(wrapper);
 }
+
+
+/*
+ * Event helpers
+ */
+function on_confirm_dialog_show(event) {
+    const button = event.relatedTarget;
+    const dialog = event.target;
+
+    const username = button.getAttribute("data-bs-username");
+
+    let e = dialog.querySelector("#username");
+    if (e) {
+        e.textContent = username;
+    }
+
+    dialog.querySelector("#confirm-button").setAttribute("data-bs-username", username);
+}
