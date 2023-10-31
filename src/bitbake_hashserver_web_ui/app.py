@@ -131,44 +131,34 @@ def main():
     if username is None:
         return no_user_error_page()
 
+    register = request.args.get("register", "false") == "true"
+
     try:
         with admin_client() as client:
             user = client.get_user(username)
+
             if user is None:
-                return render_template(
-                    "no-user.html.j2",
-                    username=username,
-                    self_reg_enabled=SELF_REGISTER_ENABLED,
-                    admin_contact=ADMIN_CONTACT,
-                )
+                if register and SELF_REGISTER_ENABLED:
+                    try:
+                        user = client.new_user(username, DEFAULT_PERMS)
+                    except (bb.asyncrpc.InvokeError, bb.asyncrpc.ClientError) as e:
+                        return error_page(f"Unable to create user {username}", str(e))
+                else:
+                    return render_template(
+                        "no-user.html.j2",
+                        username=username,
+                        self_reg_enabled=SELF_REGISTER_ENABLED,
+                        admin_contact=ADMIN_CONTACT,
+                    )
 
             return render_template(
                 "index.html.j2",
                 user=user,
+                self_reg_enabled=SELF_REGISTER_ENABLED,
             )
+
     except (bb.asyncrpc.InvokeError, bb.asyncrpc.ClientError) as e:
         return error_page("Error accessing server", str(e))
-
-
-@app.route("/register")
-def register():
-    if not SELF_REGISTER_ENABLED:
-        flask.abort(404)
-
-    username = get_username()
-    if username is None:
-        return no_user_error_page()
-
-    try:
-        with admin_client() as client:
-            user = client.new_user(username, DEFAULT_PERMS)
-
-            return render_template(
-                "index.html.j2",
-                user=user,
-            )
-    except (bb.asyncrpc.InvokeError, bb.asyncrpc.ClientError) as e:
-        return error_page(f"Unable to create user {username}", str(e))
 
 
 @app.route("/users")

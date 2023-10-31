@@ -14,7 +14,7 @@
         </div>
         <div class="container">
         {% if self_reg_enabled %}
-            <a class="btn btn-primary" role="button" href="register">Register this user</a>
+            <a class="btn btn-primary" role="button" href="./?register=true">Register this user</a>
         {% else %}
             Please contact an administrator {% if admin_contact %} at {{ admin_contact }} {% endif %} to add an account for you.
         {% endif %}
