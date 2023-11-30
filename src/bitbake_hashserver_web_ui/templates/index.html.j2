@@ -64,9 +64,8 @@
                 data-bs-target="#deleteAccountConfirmModal"
             >Delete Account</button>
         </div>
-        <div class="container">
-            <div id="liveAlertPlaceholder"></div>
-        </div>
+
+        {% include "alert.html.j2" %}
 
         <!-- Reset Token confirmation Dialog -->
         <div class="modal fade" id="resetTokenConfirmModal" tabindex="-1" aria-hidden="true">

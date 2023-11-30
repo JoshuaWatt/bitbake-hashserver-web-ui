@@ -122,9 +122,9 @@
         <div class="container">
             <button class="btn btn-outline-primary" onclick='on_remove_entries_click()'>Remove</button>
         </div>
-        <div class="container">
-            <div id="liveAlertPlaceholder"></div>
-        </div>
+
+        {% include "alert.html.j2" %}
+
         <script src="./static/bootstrap-5.3.2-dist/js/bootstrap.min.js"></script>
     </body>
 </html>

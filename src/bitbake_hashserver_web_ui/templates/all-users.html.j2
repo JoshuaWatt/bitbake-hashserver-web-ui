@@ -235,9 +235,8 @@
         <div class="container">
             <button class="btn btn-outline-primary" onclick='on_create_new_user_click()'>Create New User</button>
         </div>
-        <div class="container">
-            <div id="liveAlertPlaceholder"></div>
-        </div>
+
+        {% include "alert.html.j2" %}
 
         <!-- Delete confirmation Dialog -->
         <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">

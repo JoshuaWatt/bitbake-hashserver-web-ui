@@ -94,8 +94,21 @@ function live_alert(type, message) {
         '</div>'
     ].join("")
     alertPlaceholder.prepend(wrapper);
+
+    const dismissButton = document.getElementById("dismissAllAlerts");
+    dismissButton.hidden = false;
 }
 
+function dismiss_all_alerts() {
+    const alertList = document.querySelectorAll(".alert");
+    alertList.forEach(function (alert) {
+        let a = new bootstrap.Alert(alert);
+        a.close();
+    });
+
+    const dismissButton = document.getElementById("dismissAllAlerts");
+    dismissButton.hidden = true;
+}
 
 /*
  * Event helpers
