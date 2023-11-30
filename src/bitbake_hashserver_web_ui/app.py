@@ -126,6 +126,21 @@ def no_user_error_page():
     )
 
 
+def get_post_data(*keys):
+    data = request.get_json()
+    if not data:
+        raise Exception("POST data is missing or not JSON")
+
+    result = {}
+    for k in keys:
+        val = data.get(k, None)
+        if val is None:
+            raise Exception(f"'{k}' missing in POST data")
+        result[k] = val
+
+    return result
+
+
 def api(proc):
     @wraps(proc)
     def decorator():
@@ -197,53 +212,33 @@ def get_users(username):
         )
 
 
-@app.route("/api/user-admin/delete")
+@app.route("/api/user-admin/delete", methods=["POST"])
 @api
 def user_admin_delete(client):
-    mod_username = request.args.get("username")
-    if not mod_username:
-        raise Exception("username not specified")
-
-    client.delete_user(mod_username)
-    return {"deleted": [mod_username]}
+    data = get_post_data("username")
+    client.delete_user(data["username"])
+    return {"deleted": [data["username"]]}
 
 
-@app.route("/api/user-admin/set-perms")
+@app.route("/api/user-admin/set-perms", methods=["POST"])
 @api
 def user_admin_set_perms(client):
-    mod_username = request.args.get("username")
-    if not mod_username:
-        raise Exception("username not specified")
-
-    permissions = request.args.get("permissions")
-    if not permissions:
-        raise Exception("permissions not specified")
-
-    return client.set_user_perms(mod_username, permissions.split(","))
+    data = get_post_data("username", "permissions")
+    return client.set_user_perms(data["username"], data["permissions"])
 
 
-@app.route("/api/user-admin/reset")
+@app.route("/api/user-admin/reset", methods=["POST"])
 @api
 def user_admin_reset_token(client):
-    mod_username = request.args.get("username")
-    if not mod_username:
-        raise Exception("username not specified")
-
-    return client.refresh_token(mod_username)
+    data = get_post_data("username")
+    return client.refresh_token(data["username"])
 
 
-@app.route("/api/user-admin/new-user")
+@app.route("/api/user-admin/new-user", methods=["POST"])
 @api
 def user_admin_new_user(client):
-    mod_username = request.args.get("username")
-    if not mod_username:
-        raise Exception("username not specified")
-
-    permissions = request.args.get("permissions")
-    if not permissions:
-        raise Exception("permissions not specified")
-
-    return client.new_user(mod_username, permissions.split(","))
+    data = get_post_data("username", "permissions")
+    return client.new_user(data["username"], data["permissions"])
 
 
 @app.route("/api/user-admin/all-users")
@@ -263,25 +258,20 @@ def database(username):
         )
 
 
-@app.route("/api/db/remove-unused")
+@app.route("/api/db/remove-unused", methods=["POST"])
 @api
 def db_remove_unused(client):
-    age_seconds = request.args.get("age-seconds")
-    if not age_seconds:
-        raise Exception("age-seconds not specified")
-
-    try:
-        age_seconds = int(age_seconds)
-    except TypeError:
-        raise Exception("age-seconds is not an integer")
-
-    return client.clean_unused(age_seconds)
+    data = get_post_data("age-seconds")
+    return client.clean_unused(int(data["age-seconds"]))
 
 
-@app.route("/api/db/remove")
+@app.route("/api/db/remove", methods=["POST"])
 @api
 def db_remove(client):
-    return client.remove(request.args)
+    data = get_post_data("where")
+    if not isinstance(data["where"], dict):
+        raise TypeError("where must be a dictionary")
+    return client.remove(data["where"])
 
 
 @app.route("/api/db/usage")
@@ -317,7 +307,7 @@ def stats(username):
         )
 
 
-@app.route("/api/reset-stats")
+@app.route("/api/reset-stats", methods=["POST"])
 @api
 def reset_stats(client):
     return client.reset_stats()

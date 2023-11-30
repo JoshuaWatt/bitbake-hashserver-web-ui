@@ -9,7 +9,8 @@
         <script src="./static/common.js"></script>
         <script>
             function on_remove_unused_entries_click() {
-                db_remove_unused_entries(function (data) {
+                const seconds = parseInt(document.getElementById("unused-age").value) * parseInt(document.getElementById("unused-age-scale").value);
+                db_remove_unused_entries(seconds, function (data) {
                     if ("error" in data) {
                         live_alert("danger", data["error"]);
                     } else {

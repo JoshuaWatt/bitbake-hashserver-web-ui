@@ -4,116 +4,84 @@ function escapeHTML(unsafeText) {
     return div.innerHTML;
 }
 
+function post_request(endpoint, f, data) {
+    const req = new XMLHttpRequest();
+    req.open("POST", endpoint);
+    req.setRequestHeader("Content-Type", "application/json");
+    req.addEventListener("load", function () {
+        const data = JSON.parse(req.responseText);
+        f(data);
+    })
+    req.send(JSON.stringify(data));
+}
+
+function get_request(endpoint, f) {
+    const req = new XMLHttpRequest();
+    req.open("GET", endpoint);
+    req.addEventListener("load", function () {
+        const data = JSON.parse(req.responseText);
+        f(data);
+    })
+    req.send();
+}
+
 /*
  * User Admin functions
  */
 function user_delete(username, f) {
-    const req = new XMLHttpRequest();
-    req.open("GET", `api/user-admin/delete?username=${encodeURIComponent(username)}`);
-    req.addEventListener("load", function () {
-        const data = JSON.parse(req.responseText);
-        f(data);
-    })
-    req.send();
+    post_request("api/user-admin/delete", f, {
+        "username": username
+    });
 }
 
 function user_reset_token(username, f) {
-    const req = new XMLHttpRequest();
-    req.open("GET", `api/user-admin/reset?username=${encodeURIComponent(username)}`);
-    req.addEventListener("load", function () {
-        const data = JSON.parse(req.responseText);
-        f(data);
-    })
-    req.send();
+    post_request( "api/user-admin/reset", f, {
+        "username": username
+    });
 }
 
 function user_create(username, perms, f) {
-    const perms_str = perms.join(",");
-    const req = new XMLHttpRequest();
-    req.open("GET", `api/user-admin/new-user?username=${encodeURIComponent(username)}&permissions=${encodeURIComponent(perms_str)}`);
-    req.addEventListener("load", function () {
-        const data = JSON.parse(req.responseText);
-        f(data);
-    })
-    req.send();
+    post_request("api/user-admin/new-user", f, {
+        "username": username,
+        "permissions": perms
+    });
 }
 
 function user_set_perms(username, perms, f) {
-    const perms_str = perms.join(",");
-    const req = new XMLHttpRequest();
-    req.open("GET", `api/user-admin/set-perms?username=${encodeURIComponent(username)}&permissions=${encodeURIComponent(perms_str)}`);
-    req.addEventListener("load", function () {
-        const data = JSON.parse(req.responseText);
-        f(data);
-    })
-    req.send();
+    post_request("api/user-admin/set-perms", f, {
+        "username": username,
+        "permissions": perms
+    });
 }
 
 function get_all_users(f) {
-    const req = new XMLHttpRequest();
-    req.open("GET", "api/user-admin/all-users");
-    req.addEventListener("load", function () {
-        const data = JSON.parse(req.responseText);
-        f(data);
-    })
-    req.send();
+    get_request("api/user-admin/all-users", f);
 }
 
 /*
  * Database Admin functions
  */
-function db_remove_unused_entries(f) {
-    const req = new XMLHttpRequest();
-    const seconds = parseInt(document.getElementById("unused-age").value) * parseInt(document.getElementById("unused-age-scale").value);
-    req.open("GET", `api/db/remove-unused?age-seconds=${encodeURIComponent(seconds)}`);
-    req.addEventListener("load", function () {
-        const data = JSON.parse(req.responseText);
-        f(data);
-    })
-    req.send();
+function db_remove_unused_entries(age_seconds, f) {
+    post_request("api/db/remove-unused", f, {
+        "age-seconds": age_seconds
+    });
 }
 
 function db_remove_entries(where, f) {
-    let query = [];
-
-    for (const key of Object.keys(where)) {
-        query.push(encodeURIComponent(key) + "=" + encodeURIComponent(where[key]));
-    }
-
-    if (query.length == 0) {
-        return;
-    }
-
-    const req = new XMLHttpRequest();
-    req.open("GET", "api/db/remove?" + query.join("&"));
-    req.addEventListener("load", function () {
-        const data = JSON.parse(req.responseText);
-        f(data);
-    })
-    req.send();
+    post_request("api/db/remove", f, {
+        "where": where
+    });
 }
 
 function db_get_usage(f) {
-    const req = new XMLHttpRequest();
-    req.open("GET", "api/db/usage");
-    req.addEventListener("load", function () {
-        const data = JSON.parse(req.responseText);
-        f(data);
-    })
-    req.send();
+    get_request("api/db/usage", f);
 }
 
 /*
  * Stats Admin functions
  */
 function stats_reset(f) {
-    const req = new XMLHttpRequest();
-    req.open("GET", "api/reset-stats");
-    req.addEventListener("load", function () {
-        const data = JSON.parse(req.responseText);
-        f(data);
-    })
-    req.send();
+    post_request("api/reset-stats", f, null);
 }
 
 function live_alert(type, message) {
