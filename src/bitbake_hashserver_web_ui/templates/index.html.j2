@@ -34,7 +34,8 @@
                         return;
                     }
 
-                    location.reload();
+                    // Drop all arguments when reloading
+                    window.location = window.location.pathname
                 });
             }
 
