@@ -96,19 +96,28 @@ function stats_reset(f) {
     post_request("api/reset-stats", f, null);
 }
 
+function update_dismiss_button() {
+    const dismissButton = document.getElementById("dismissAllAlerts");
+    const alertList = document.querySelectorAll(".alert");
+    dismissButton.hidden = (alertList.length <= 1);
+}
+
 function live_alert(type, message) {
     const alertPlaceholder = document.getElementById("liveAlertPlaceholder");
-    const wrapper = document.createElement("div");
-    wrapper.innerHTML = [
-        `<div class="alert alert-${type} alert-dismissible" role="alert">`,
-        `   <div>${message}</div>`,
-        '   <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>',
-        '</div>'
+    let div = document.createElement("div");
+    div.classList.add("alert");
+    div.classList.add(`alert-${type}`);
+    div.classList.add("alert-dismissible");
+    div.setAttribute("role", "alert");
+    div.innerHTML = [
+        `<div>${message}</div>`,
+        '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>',
     ].join("")
-    alertPlaceholder.prepend(wrapper);
+    alertPlaceholder.prepend(div);
 
-    const dismissButton = document.getElementById("dismissAllAlerts");
-    dismissButton.hidden = false;
+    div.addEventListener("closed.bs.alert", update_dismiss_button);
+
+    update_dismiss_button();
 }
 
 function dismiss_all_alerts() {
@@ -118,8 +127,7 @@ function dismiss_all_alerts() {
         a.close();
     });
 
-    const dismissButton = document.getElementById("dismissAllAlerts");
-    dismissButton.hidden = true;
+    update_dismiss_button();
 }
 
 /*
