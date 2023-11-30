@@ -26,6 +26,18 @@ function get_request(endpoint, f) {
 }
 
 /*
+ * Query functions
+ */
+
+function db_query(method, taskhash, outhash, f) {
+    post_request("api/query", f, {
+        "method": method,
+        "taskhash": taskhash,
+        "outhash": outhash
+    });
+}
+
+/*
  * User Admin functions
  */
 function user_delete(username, f) {

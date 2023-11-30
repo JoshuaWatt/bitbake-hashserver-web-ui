@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="./static/bootstrap-5.3.2-dist/css/bootstrap.min.css"/>
+        <link rel="stylesheet" href="./static/common.css"/>
+        <title>Query Hash Equivalence Server</title>
+        <script src="./static/common.js"></script>
+        <script>
+            function on_query_click() {
+                const method = document.getElementById("query-method").value;
+                const taskhash = document.getElementById("query-taskhash").value;
+                const outhash = document.getElementById("query-outhash").value;
+
+                db_query(method, taskhash, outhash, function (data) {
+                    if ("error" in data) {
+                        live_alert("danger", data["error"]);
+                        return;
+                    } 
+
+                    const columns = Object.keys(data).sort();
+
+                    const table = document.getElementById("query-result");
+                    let tbody = document.createElement("tbody");
+
+                    for (let idx in columns) {
+                        const column = columns[idx];
+
+                        let row = tbody.insertRow();
+                        row.insertCell().innerHTML = escapeHTML(column);
+                        row.insertCell().innerHTML = escapeHTML(data[column]);
+                    }
+
+                    table.replaceChild(tbody, table.tBodies[0]);
+                });
+            }
+        </script>
+    </head>
+    <body>
+        {% include "nav-bar.html.j2" %}
+        <div class="container">
+            <h1>Query</h1>
+        </div>
+        <div class="container">
+            <div class="mb-3 row">
+                <div class="col">method</div>
+                <div class="col">
+                    <input class="form-control" type="text" id="query-method"/></td>
+                </div>
+            </div>
+            <div class="mb-3 row">
+                <div class="col">taskhash</div>
+                <div class="col">
+                    <input class="form-control" type="text" id="query-taskhash"/></td>
+                </div>
+            </div>
+            <div class="mb-3 row">
+                <div class="col">outhash</div>
+                <div class="col">
+                    <input class="form-control" type="text" id="query-outhash"/></td>
+                </div>
+            </div>
+        </div>
+        <div class="container">
+            <button class="btn btn-primary" onclick='on_query_click()'>Query</button>
+        </div>
+        <div class="container">
+            <h1>Query Results</h1>
+            <table class="table" id="query-result">
+                <thead>
+                    <th>Column</th>
+                    <th>Value</th>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+
+        {% include "alert.html.j2" %}
+
+        <script src="./static/bootstrap-5.3.2-dist/js/bootstrap.min.js"></script>
+    </body>
+</html>
+
+

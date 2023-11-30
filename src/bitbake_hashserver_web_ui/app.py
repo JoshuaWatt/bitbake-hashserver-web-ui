@@ -199,6 +199,31 @@ def main(username):
         )
 
 
+@app.route("/query")
+@user_page
+def query(username):
+    with user_client(username) as client:
+        return render_template("query.html.j2", user=client.get_user())
+
+
+@app.route("/api/query", methods=["POST"])
+@api
+def db_query(client):
+    data = get_post_data("method", "taskhash", "outhash")
+
+    if data["outhash"]:
+        result = client.get_outhash(data["method"], data["outhash"], data["taskhash"])
+    else:
+        result = client.get_taskhash(
+            data["method"], data["taskhash"], all_properties=True
+        )
+
+    if result is None:
+        raise Exception("No matching data found")
+
+    return result
+
+
 @app.route("/users")
 @user_page
 def get_users(username):
