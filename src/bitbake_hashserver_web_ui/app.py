@@ -18,6 +18,7 @@
 import sys
 import os
 import contextlib
+from functools import wraps
 import flask
 from flask import Flask, request, render_template
 
@@ -125,252 +126,201 @@ def no_user_error_page():
     )
 
 
-@app.route("/")
-def main():
-    username = get_username()
-    if username is None:
-        return no_user_error_page()
+def api(proc):
+    @wraps(proc)
+    def decorator():
+        try:
+            with api_client() as client:
+                return proc(client)
+        except (bb.asyncrpc.InvokeError, bb.asyncrpc.ClientError) as e:
+            return {"error": "Unable to complete request: " + str(e)}
+        except Exception as e:
+            return {"error": str(e)}
 
+    return decorator
+
+
+def user_page(proc):
+    @wraps(proc)
+    def decorator():
+        username = get_username()
+        if username is None:
+            return no_user_error_page()
+
+        try:
+            return proc(username)
+        except (bb.asyncrpc.InvokeError, bb.asyncrpc.ClientError) as e:
+            return error_page("Error accessing server", str(e))
+
+    return decorator
+
+
+@app.route("/")
+@user_page
+def main(username):
     register = request.args.get("register", "false") == "true"
 
-    try:
-        with admin_client() as client:
-            user = client.get_user(username)
+    with admin_client() as client:
+        user = client.get_user(username)
 
-            if user is None:
-                if register and SELF_REGISTER_ENABLED:
-                    try:
-                        user = client.new_user(username, DEFAULT_PERMS)
-                    except (bb.asyncrpc.InvokeError, bb.asyncrpc.ClientError) as e:
-                        return error_page(f"Unable to create user {username}", str(e))
-                else:
-                    return render_template(
-                        "no-user.html.j2",
-                        username=username,
-                        self_reg_enabled=SELF_REGISTER_ENABLED,
-                        admin_contact=ADMIN_CONTACT,
-                    )
+        if user is None:
+            if register and SELF_REGISTER_ENABLED:
+                try:
+                    user = client.new_user(username, DEFAULT_PERMS)
+                except (bb.asyncrpc.InvokeError, bb.asyncrpc.ClientError) as e:
+                    return error_page(f"Unable to create user {username}", str(e))
+            else:
+                return render_template(
+                    "no-user.html.j2",
+                    username=username,
+                    self_reg_enabled=SELF_REGISTER_ENABLED,
+                    admin_contact=ADMIN_CONTACT,
+                )
 
-            return render_template(
-                "index.html.j2",
-                user=user,
-                self_reg_enabled=SELF_REGISTER_ENABLED,
-            )
-
-    except (bb.asyncrpc.InvokeError, bb.asyncrpc.ClientError) as e:
-        return error_page("Error accessing server", str(e))
+        return render_template(
+            "index.html.j2",
+            user=user,
+            self_reg_enabled=SELF_REGISTER_ENABLED,
+        )
 
 
 @app.route("/users")
-def get_users():
-    username = get_username()
-    if username is None:
-        return no_user_error_page()
-
-    try:
-        with user_client(username) as client:
-            return render_template(
-                "all-users.html.j2",
-                all_perms=sorted(list(hashserv.server.ALL_PERMISSIONS)),
-                admin_user=HASHSERVER_USER,
-                default_perms=DEFAULT_PERMS,
-                user=client.get_user(),
-            )
-    except (bb.asyncrpc.InvokeError, bb.asyncrpc.ClientError) as e:
-        return error_page("Unable to complete request", str(e))
+@user_page
+def get_users(username):
+    with user_client(username) as client:
+        return render_template(
+            "all-users.html.j2",
+            all_perms=sorted(list(hashserv.server.ALL_PERMISSIONS)),
+            admin_user=HASHSERVER_USER,
+            default_perms=DEFAULT_PERMS,
+            user=client.get_user(),
+        )
 
 
 @app.route("/api/user-admin/delete")
-def user_admin_delete():
+@api
+def user_admin_delete(client):
     mod_username = request.args.get("username")
     if not mod_username:
-        return {"error": "username not specified"}
+        raise Exception("username not specified")
 
-    try:
-        with api_client() as client:
-            client.delete_user(mod_username)
-            return {"deleted": [mod_username]}
-
-    except (bb.asyncrpc.InvokeError, bb.asyncrpc.ClientError) as e:
-        return {"error": "Unable to complete request: " + str(e)}
-    except Exception as e:
-        return {"error": str(e)}
+    client.delete_user(mod_username)
+    return {"deleted": [mod_username]}
 
 
 @app.route("/api/user-admin/set-perms")
-def user_admin_set_perms():
+@api
+def user_admin_set_perms(client):
     mod_username = request.args.get("username")
     if not mod_username:
-        return {"error": "username not specified"}
+        raise Exception("username not specified")
 
     permissions = request.args.get("permissions")
     if not permissions:
-        return {"error": "permissions not specified"}
+        raise Exception("permissions not specified")
 
-    try:
-        with api_client() as client:
-            return client.set_user_perms(mod_username, permissions.split(","))
-
-    except (bb.asyncrpc.InvokeError, bb.asyncrpc.ClientError) as e:
-        return {"error": "Unable to complete request: " + str(e)}
-    except Exception as e:
-        return {"error": str(e)}
+    return client.set_user_perms(mod_username, permissions.split(","))
 
 
 @app.route("/api/user-admin/reset")
-def user_admin_reset_token():
+@api
+def user_admin_reset_token(client):
     mod_username = request.args.get("username")
     if not mod_username:
-        return {"error": "username not specified"}
+        raise Exception("username not specified")
 
-    try:
-        with api_client() as client:
-            return client.refresh_token(mod_username)
-
-    except (bb.asyncrpc.InvokeError, bb.asyncrpc.ClientError) as e:
-        return {"error": "Unable to complete request: " + str(e)}
-    except Exception as e:
-        return {"error": str(e)}
+    return client.refresh_token(mod_username)
 
 
 @app.route("/api/user-admin/new-user")
-def user_admin_new_user():
+@api
+def user_admin_new_user(client):
     mod_username = request.args.get("username")
     if not mod_username:
-        return {"error": "username not specified"}
+        raise Exception("username not specified")
 
     permissions = request.args.get("permissions")
     if not permissions:
-        return {"error": "permissions not specified"}
+        raise Exception("permissions not specified")
 
-    try:
-        with api_client() as client:
-            return client.new_user(mod_username, permissions.split(","))
-
-    except (bb.asyncrpc.InvokeError, bb.asyncrpc.ClientError) as e:
-        return {"error": "Unable to complete request: " + str(e)}
-    except Exception as e:
-        return {"error": str(e)}
+    return client.new_user(mod_username, permissions.split(","))
 
 
 @app.route("/api/user-admin/all-users")
-def user_admin_all_users():
-    try:
-        with api_client() as client:
-            users = client.get_all_users()
-            return {"users": users}
-
-    except (bb.asyncrpc.InvokeError, bb.asyncrpc.ClientError) as e:
-        return {"error": "Unable to complete request: " + str(e)}
-    except Exception as e:
-        return {"error": str(e)}
+@api
+def user_admin_all_users(client):
+    return {"users": client.get_all_users()}
 
 
 @app.route("/database")
-def database():
-    username = get_username()
-    if username is None:
-        return no_user_error_page()
-
-    try:
-        with user_client(username) as client:
-            return render_template(
-                "database.html.j2",
-                query_columns=sorted(client.get_db_query_columns()),
-                user=client.get_user(),
-            )
-    except (bb.asyncrpc.InvokeError, bb.asyncrpc.ClientError) as e:
-        return error_page("Unable to complete request", str(e))
+@user_page
+def database(username):
+    with user_client(username) as client:
+        return render_template(
+            "database.html.j2",
+            query_columns=sorted(client.get_db_query_columns()),
+            user=client.get_user(),
+        )
 
 
 @app.route("/api/db/remove-unused")
-def db_remove_unused():
+@api
+def db_remove_unused(client):
     age_seconds = request.args.get("age-seconds")
     if not age_seconds:
-        return {"error": "age-seconds not specified"}
+        raise Exception("age-seconds not specified")
 
     try:
         age_seconds = int(age_seconds)
     except TypeError:
-        return {"error": "age-seconds is not an integer"}
+        raise Exception("age-seconds is not an integer")
 
-    try:
-        with api_client() as client:
-            return client.clean_unused(age_seconds)
-
-    except (bb.asyncrpc.InvokeError, bb.asyncrpc.ClientError) as e:
-        return {"error": "Unable to complete request: " + str(e)}
-    except Exception as e:
-        return {"error": str(e)}
+    return client.clean_unused(age_seconds)
 
 
 @app.route("/api/db/remove")
-def db_remove():
-    try:
-        with api_client() as client:
-            return client.remove(request.args)
-
-    except (bb.asyncrpc.InvokeError, bb.asyncrpc.ClientError) as e:
-        return {"error": "Unable to complete request: " + str(e)}
-    except Exception as e:
-        return {"error": str(e)}
+@api
+def db_remove(client):
+    return client.remove(request.args)
 
 
 @app.route("/api/db/usage")
-def db_stats():
-    try:
-        with api_client() as client:
-            return {"usage": client.get_db_usage()}
-
-    except (bb.asyncrpc.InvokeError, bb.asyncrpc.ClientError) as e:
-        return {"error": "Unable to complete request: " + str(e)}
-    except Exception as e:
-        return {"error": str(e)}
+@api
+def db_stats(client):
+    return {"usage": client.get_db_usage()}
 
 
 @app.route("/stats")
-def stats():
-    username = get_username()
-    if username is None:
-        return no_user_error_page()
+@user_page
+def stats(username):
+    with user_client(username) as client:
+        user = client.get_user()
 
-    try:
-        with user_client(username) as client:
-            user = client.get_user()
+        stats = client.get_stats()
+        info = []
+        columns = set()
 
-            stats = client.get_stats()
-            info = []
-            columns = set()
+        for name in sorted(stats.keys()):
+            s = {"name": name}
+            for k, v in stats[name].items():
+                if isinstance(v, float):
+                    v = "{0:.3f}".format(v)
+                s[k] = v
+                columns.add(k)
+            info.append(s)
 
-            for name in sorted(stats.keys()):
-                s = {"name": name}
-                for k, v in stats[name].items():
-                    if isinstance(v, float):
-                        v = "{0:.3f}".format(v)
-                    s[k] = v
-                    columns.add(k)
-                info.append(s)
-
-            return render_template(
-                "stats.html.j2",
-                info=info,
-                columns=sorted(list(columns)),
-                user=user,
-            )
-    except (bb.asyncrpc.InvokeError, bb.asyncrpc.ClientError) as e:
-        return error_page("Unable to complete request", str(e))
+        return render_template(
+            "stats.html.j2",
+            info=info,
+            columns=sorted(list(columns)),
+            user=user,
+        )
 
 
 @app.route("/api/reset-stats")
-def reset_stats():
-    try:
-        with api_client() as client:
-            return client.reset_stats()
-
-    except (bb.asyncrpc.InvokeError, bb.asyncrpc.ClientError) as e:
-        return {"error": "Unable to complete request: " + str(e)}
-    except Exception as e:
-        return {"error": str(e)}
+@api
+def reset_stats(client):
+    return client.reset_stats()
 
 
 @app.after_request
